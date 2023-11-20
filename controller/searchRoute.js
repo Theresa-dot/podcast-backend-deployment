@@ -1,6 +1,28 @@
 const express = require("express");
 const axios=require('axios')
 const searchRoute = express.Router();
+const {parseString} = require('xml2js')
+
+searchRoute.get('/feed' , async(req,res,next) => {
+  const url=req.query.url
+
+  const {data}=await axios({
+    url,
+    method:'get'
+  })
+
+  parseString(data,(err,json)=>{
+    if(err){
+      return
+    }
+    const {rss}=json
+    const {channel}=rss
+    const payload=channel[0]
+    res.json(payload)
+  })
+
+   
+})
 
 searchRoute.get('/search',async(req,res,next)=>{
     const searchTerm=req.body.term
@@ -58,5 +80,6 @@ searchRoute.post('/search',async(req,res,next)=>{
         podcasts,
       });
 })
+
 
 module.exports = searchRoute;

@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const registerSchema = require("../model/registerSchema");
 const axios=require('axios')
 const registerRoute = express.Router();
@@ -51,7 +52,7 @@ registerRoute.get("/", (req, res) => {
 
 registerRoute.route("/update-registrant/:id")
     .get((req, res) => {
-        registerSchema.findById(req.params.id, (err, data) => {
+        registerSchema.findById(mongoose.Types.ObjectId(req.params.id), (err, data) => {
             if (err)
                 return err;
             else
@@ -59,7 +60,7 @@ registerRoute.route("/update-registrant/:id")
         });
     })
     .put((req, res) => {
-        registerSchema.findByIdAndUpdate(req.params.id, { $set: req.body },
+        registerSchema.findByIdAndUpdate(mongoose.Types.ObjectId(req.params.id), { $set: req.body },
             (err, data) => {
                 if (err)
                     return err;
@@ -68,13 +69,24 @@ registerRoute.route("/update-registrant/:id")
             });
     });
 
-registerRoute.delete("/delete-registrant/:id", (req, res) => {
-    registerSchema.findByIdAndRemove(req.params.id, (err, data) => {
-        if (err)
-            return err;
-        else
-            res.json(data);
-    });
-});
+registerRoute.delete('/delete-account/:id', async (req, res) => {
+    const userId = req.params.id;
+    console.log("Deleting account with ID:", userId);
+  
+    try {
+      const deletedUser = await registerSchema.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      return res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  
+  
 
 module.exports = registerRoute;
